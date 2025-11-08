@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Lab 3 – RSA Encryption & Cracking Demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+ :root {
+   --bg:#0e1117;
+   --panel:#161b22;
+   --accent:#58a6ff;
+   --text:#c9d1d9;
+   --danger:#ff6b6b;
+   --ok:#3fb950;
+   --code-bg:#0d1117;
+   font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+ }
+ body[data-theme="light"] {
+   --bg:#f5f7fa;
+   --panel:#ffffff;
+   --accent:#0066cc;
+   --text:#1b1f23;
+   --danger:#d92c2c;
+   --ok:#1f883d;
+   --code-bg:#f0f3f6;
+ }
+ body {background:var(--bg);color:var(--text);margin:0;padding:0;line-height:1.4;}
+ header {padding:1.2rem 2rem;background:#121820;border-bottom:1px solid #222;}
+ h1 {margin:0;font-size:clamp(1.5rem,2.5vw,2.4rem);}
+ a {color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
+ main {max-width:1000px;margin:0 auto;padding:2rem;}
+ section {margin-bottom:2.5rem;background:var(--panel);padding:1.4rem 1.6rem;border-radius:10px;box-shadow:0 0 0 1px #1f242c,0 4px 12px rgba(0,0,0,.35);}
+ h2 {margin-top:0;font-size:1.3rem;letter-spacing:.5px;text-transform:uppercase;color:#fff;}
+ pre {background:var(--code-bg);padding:.8rem 1rem;border-radius:6px;overflow:auto;font-size:.85rem;}
+ code {font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;}
+ table {border-collapse:collapse;width:100%;margin:.6rem 0;font-size:.9rem;}
+ th,td {border:1px solid #2d333b;padding:.5rem;text-align:left;}
+ th {background:#1f242c;}
+ .flex {display:flex;flex-wrap:wrap;gap:1.2rem;}
+ .card {flex:1 1 280px;background:#0f141a;padding:1rem;border-radius:8px;border:1px solid #222;}
+ .out {color:var(--ok);}
+ .warn {color:var(--danger);font-weight:600;}
+ .grid-2 {display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;}
+ figure {margin:0;}
+ figcaption {font-size:.75rem;opacity:.7;margin-top:.3rem;}
+ .pill {display:inline-block;padding:.25rem .6rem;border-radius:999px;background:#21262d;font-size:.7rem;letter-spacing:.5px;text-transform:uppercase;margin-right:.4rem;}
+ .inline {display:inline-block;margin:.25rem .4rem .25rem 0;}
+ .btnbar {display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem;}
+ .btn {display:inline-flex;align-items:center;gap:.4rem;background:#58a6ff;color:#fff !important;border:0;padding:.55rem .95rem;font-weight:600;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none;}
+ .btn:hover{filter:brightness(1.1);} 
+ body[data-theme="light"] .btn {background:var(--accent);color:#ffffff !important;}
+ footer {text-align:center;padding:2rem 1rem;font-size:.75rem;opacity:.65;}
+ .demo-box {border:1px solid #30363d;padding:1rem;border-radius:8px;background:#0f141a;}
+ label {display:block;font-size:.8rem;margin-top:.6rem;}
+ input,select {background:#0d1117;color:var(--text);border:1px solid #30363d;border-radius:6px;padding:.45rem .6rem;font-size:.85rem;width:100%;}
+ button {background:var(--accent);color:#fff;border:0;padding:.55rem .9rem;font-weight:600;border-radius:6px;cursor:pointer;margin-top:.8rem;font-size:.85rem;}button:hover{filter:brightness(1.15);} 
+ .result {margin-top:.8rem;font-size:.85rem;word-break:break-word;}
+ .tagline {font-size:.9rem;opacity:.8;margin-top:.4rem;}
+ body[data-theme="light"] th, body[data-theme="light"] td {border-color:#d0d7de;}
+ body[data-theme="light"] th {background:#f6f8fa;}
+ body[data-theme="light"] .demo-box {background:#ffffff;border-color:#d0d7de;}
+ body[data-theme="light"] input, body[data-theme="light"] select {background:#ffffff;color:#1b1f23;border-color:#d0d7de;}
+ body[data-theme="light"] img {border-color:#d0d7de !important;}
+ body[data-theme="light"] .card {background:#ffffff;border-color:#d0d7de;}
+ body[data-theme="light"] .pill {background:#eef2f6;color:#0e1117;border:1px solid #d0d7de;}
+ .ai-badge {display:inline-flex;align-items:center;vertical-align:middle;margin-left:.5rem;padding:.25rem .35rem;border-radius:4px;background:#21262d;color:var(--accent);font-size:.58rem;font-weight:600;letter-spacing:.35px;text-transform:uppercase;border:1px solid #2d333b;line-height:1;height:1.1em;}
+ body[data-theme="light"] .ai-badge {background:#e9eef3;border-color:#d0d7de;}
+ body[data-theme="light"] header {background:#ffffff;border-bottom:1px solid #d0d7de;}
+ body[data-theme="light"] section {box-shadow:0 0 0 1px #d0d7de,0 4px 12px rgba(0,0,0,.08);} 
+ body[data-theme="light"] h2 {color:#0e1117;}
+ @media (max-width:650px){body{font-size:15px;}header{padding:1rem 1.2rem;}main{padding:1.4rem;}section{padding:1rem 1.1rem;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lab 3 – RSA Encryption & Key Cracking</h1>
+  <div class="tagline">Interactive overview of <code>lab3-part1.py</code>, <code>lab3-part2.py</code>, <code>lab3-part3.py</code> & helpers.</div>
+  <div class="btnbar">
+    <a class="btn" href="all-in-one.html">All‑in‑One Interactive Page ▶</a>
+    <button class="btn" id="themeToggle" aria-label="Toggle light/dark theme">🌕 Light</button>
+    <span class="ai-badge" title="HTML interface auto-generated by an AI assistant">AI‑Generated UI</span>
+  </div>
+</header>
+<main>
+
+<section id="about">
+  <h2>Overview</h2>
+  <p>This lab explores the RSA cryptosystem across three scripts: key generation + sample encryption/decryption (Part 1), cracking a provided RSA instance by factoring the modulus (Part 2), and measuring how cracking time scales with prime bit length (Part 3). A probabilistic Miller–Rabin primality test (<code>prime.py</code>) underpins key generation. Below you'll find runnable concepts, sample output, and notes about performance.</p>
+  <p><strong>Repository:</strong> <a href="https://github.com/JosephPotapenko/RSA-Key-Cracking" target="_blank" rel="noopener">GitHub – RSA-Key-Cracking</a></p>
+</section>
+
+<section id="parts">
+  <h2>Parts Summary</h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="pill">Part 1</div>
+      <strong>Generate Keys & Encrypt</strong>
+      <p>Creates two random primes <em>p</em>, <em>q</em>, computes <code>n = p·q</code>, <code>λ(n)=lcm(p−1,q−1)</code>, selects <code>e=65537</code>, then derives <code>d = e<sup>-1</sup> mod λ(n)</code>. Demonstrates encrypt/decrypt in both directions.</p>
+      <pre><code>python lab3-part1.py 64
+public key is:  (n,e)
+private key is: (n,d)
+message:        b'test,message'
+ciphered:       123456...
+deciphered:     b'test,message'
+</code></pre>
+    </div>
+    <div class="card">
+      <div class="pill">Part 2</div>
+      <strong>Crack Provided Ciphertext</strong>
+      <p>Given a fixed public key and ciphertext <code>C</code>, factors <code>n</code> with <code>sympy.primefactors</code> ⇒ obtains <code>p,q</code>, recomputes <code>λ(n)</code>, finds <code>d</code>, and deciphers <code>M = C^d mod n</code> ⇒ message bytes.</p>
+      <pre><code>python lab3-part2.py
+p:  ...
+q:  ...
+lambda(n): ...
+d: ...
+decrypted message: b'YouDonePassed!!'
+</code></pre>
+    </div>
+    <div class="card">
+      <div class="pill">Part 3</div>
+      <strong>Timing / Scaling</strong>
+      <p>Generates primes of various bit sizes, constructs <code>n</code>, then factors using <code>sympy.primefactors</code>. Repeats to average cracking time and plots bit size vs. time.</p>
+      <pre><code>python lab3-part3.py
+Testing 64-bit primes
+   Test 1: 0.0021 s
+   ...
+Average for 64-bit
+Time: 0.0020 s
+...
+Plot saved as rsa_crack_times.png
+</code></pre>
+    </div>
+    <div class="card">
+      <div class="pill">Helper</div>
+      <strong>Miller–Rabin (prime.py)</strong>
+      <p>Probabilistic primality test. <code>gen_prime(bits)</code> loops until a candidate passes 20 rounds of Miller–Rabin, setting top & bottom bits to ensure size & oddness.</p>
+      <pre><code>def gen_prime(nbits):
+    while True:
+        p = random.getrandbits(nbits)
+        p |= 2**nbits | 1
+        if miller_rabin(p):
+            return p
+</code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="interactive">
+  <h2>Mini Demo – RSA Flow (Toy)</h2>
+  <p>This client-side toy now separates key generation, encryption, and decryption so you can inspect each step. <strong>Never use these tiny keys or raw RSA without padding in production.</strong></p>
+  <div class="demo-box" id="toy-box">
+    <div class="grid-2">
+      <div>
+        <label>Prime p (small)</label>
+        <input type="number" id="p" value="53" />
+      </div>
+      <div>
+        <label>Prime q (small)</label>
+        <input type="number" id="q" value="59" />
+      </div>
+      <div>
+        <label>Public exponent e</label>
+        <input type="number" id="e" value="65537" />
+      </div>
+      <div>
+        <label>Message (ASCII)</label>
+        <input type="text" id="msg" value="test" />
+      </div>
+    </div>
+    <div class="btnbar" style="margin-top:1rem;">
+      <button class="btn" id="genBtn" type="button">Generate Keys</button>
+      <button class="btn" id="encBtn" type="button">Encrypt</button>
+      <button class="btn" id="decBtn" type="button">Decrypt</button>
+      <button class="btn" id="decManualBtn" type="button">Decrypt Cipher Input</button>
+    </div>
+    <div style="margin-top:1rem;">
+      <label>Manual Cipher (integer)</label>
+      <input type="text" id="cipherInput" placeholder="Paste cipher integer here" />
+    </div>
+    <div class="result" id="toyResult" style="margin-top:1rem;"></div>
+  </div>
+  <script>
+    // Utility math
+    function egcd(a,b){let x=0,y=1,u=1,v=0;while(a!==0){let q=Math.floor(b/a),r=b%a,m=x-u*q,n=y-v*q;b=a;a=r;x=u;y=v;u=m;v=n;}return [b,x,y];}
+    function modinv(a,m){let gxy=egcd(a,m);if(gxy[0]!==1) return null;return (gxy[1]%m+m)%m;}
+    function gcd(a,b){return b===0?a:gcd(b,a%b);}    
+    function lcm(a,b){return a*b/gcd(a,b);}    
+    // State
+    let toyState={p:null,q:null,n:null,lambda:null,e:null,d:null,msgInt:null,cipher:null};
+    function asciiToInt(str){let x=0n;for(let i=0;i<str.length;i++){x=(x<<8n)|BigInt(str.charCodeAt(i));}return x;}
+    function intToAscii(n){if(n===0n) return '';let bytes=[];while(n>0n){bytes.unshift(Number(n & 255n));n >>=8n;}return String.fromCharCode(...bytes);}    
+    function render(){const R=document.getElementById('toyResult');
+      const s=toyState;
+      let out=[];
+      if(s.n){out.push(`<strong>n</strong> = ${s.n}`);out.push(`λ(n) = ${s.lambda}`);out.push(`<strong>e</strong> = ${s.e}`);out.push(`<strong>d</strong> = ${s.d}`);} else {out.push('<span class="warn">No key yet.</span>');}
+      if(s.msgInt!==null) out.push(`M (int) = ${s.msgInt}`);
+      if(s.cipher!==null) out.push(`C (cipher) = ${s.cipher}`);
+      if(s.cipher!==null && s.d) {const rec=intToAscii(powMod(BigInt(s.cipher), BigInt(s.d), BigInt(s.n))); out.push(`Recovered = <strong>${rec}</strong>`);} 
+      R.innerHTML=out.join('<br/>');
+    }
+    function powMod(base,exp,mod){let r=1n;base%=mod;while(exp>0n){if(exp&1n) r=(r*base)%mod;base=(base*base)%mod;exp >>=1n;}return r;}
+    function generate(){const p=parseInt(document.getElementById('p').value,10);const q=parseInt(document.getElementById('q').value,10);const e=parseInt(document.getElementById('e').value,10);
+      if(p===q){toyResult.innerHTML='<span class="warn">p and q must differ.</span>';return;}
+      const n=p*q;const lambda=lcm(p-1,q-1);const d=modinv(e,lambda);if(!d){toyResult.innerHTML='<span class="warn">Invalid e for given primes.</span>';return;}
+      toyState={p,q,n,lambda,e,d,msgInt:null,cipher:null};render();}
+    function encrypt(){if(!toyState.n){toyResult.innerHTML='<span class="warn">Generate keys first.</span>';return;}const msg=document.getElementById('msg').value;const m=asciiToInt(msg);toyState.msgInt=m;const c=powMod(m,BigInt(toyState.e),BigInt(toyState.n));toyState.cipher=c;render();}
+    function decrypt(){if(!toyState.cipher){toyResult.innerHTML='<span class="warn">Encrypt first.</span>';return;}render();}
+    function decryptManual(){if(!toyState.n){toyResult.innerHTML='<span class="warn">Generate keys first.</span>';return;}const cStr=document.getElementById('cipherInput').value.trim();if(!cStr){toyResult.innerHTML='<span class="warn">Enter a cipher integer.</span>';return;}let c;try{c=BigInt(cStr);}catch(e){toyResult.innerHTML='<span class="warn">Invalid cipher integer.</span>';return;}const rec=intToAscii(powMod(c,BigInt(toyState.d),BigInt(toyState.n)));toyState.cipher=c;toyState.msgInt=powMod(c,BigInt(toyState.d),BigInt(toyState.n));toyResult.innerHTML=`<strong>Manual Cipher</strong> = ${c}<br/>Recovered = <strong>${rec}</strong>`;}
+    document.getElementById('genBtn').addEventListener('click',generate);
+    document.getElementById('encBtn').addEventListener('click',encrypt);
+    document.getElementById('decBtn').addEventListener('click',decrypt);
+    document.getElementById('decManualBtn').addEventListener('click',decryptManual);
+  </script>
+</section>
+
+
+<section id="functions">
+  <h2>Encryption & Decryption Functions (Reference)</h2>
+  <p>The lab uses raw RSA without padding. Below are the core operations in both Python (from the lab) and JavaScript (mirroring the in-page demo). They convert the entire message to an integer; production systems chunk and apply padding (e.g., OAEP).</p>
+  <div class="grid-2">
+    <div>
+      <h3>Python</h3>
+      <pre><code>def cipher(m_bytes, e, n):
+    i = int.from_bytes(m_bytes)
+    return pow(i, e, n)
+
+def dcipher(c, d, n):
+    return pow(c, d, n)
+
+# 'Sign' with private exponent (educational)
+def cipher_d(m_bytes, d, n):
+    i = int.from_bytes(m_bytes)
+    return pow(i, d, n)</code></pre>
+    </div>
+    <div>
+      <h3>JavaScript</h3>
+      <pre><code>// m and c are BigInts
+function egcd(a,b){let x=0n,y=1n,u=1n,v=0n;while(a!==0n){let q=b/a;[b,a,x,y,u,v]=[a,b%a,u,v,x-u*q,y-v*q];}return [b,x,y];}
+function modinv(a,m){const[g,x]=egcd(a,m);if(g!==1n) return null;return (x%m+m)%m;}
+function modPow(b,e,n){b%=n;let r=1n;while(e>0n){if(e&1n) r=(r*b)%n;b=(b*b)%n;e >>=1n;}return r;}
+function rsaEncryptBlock(m,e,n){return modPow(m,e,n);} // public
+function rsaDecryptBlock(c,d,n){return modPow(c,d,n);} // private
+// Convenience wrappers for whole ASCII strings
+function strToBigInt(str){let x=0n;for(const ch of str)x=(x<<8n)|BigInt(ch.charCodeAt(0));return x;}
+function bigIntToStr(v){let bytes=[];while(v>0){bytes.unshift(Number(v&255n));v >>=8n;}return String.fromCharCode(...bytes);} </code></pre>
+    </div>
+  </div>
+  <p><strong>Flow:</strong> Key generation selects primes p,q → n=pq → λ(n)=lcm(p−1,q−1) → choose e (65537) → compute d = e<sup>-1</sup> mod λ(n). Encryption: C = M<sup>e</sup> mod n. Decryption: M = C<sup>d</sup> mod n.</p>
+</section>
+<section id="usage">
+  <h2>How to Run Locally</h2>
+  <table>
+    <thead><tr><th>Part</th><th>Command</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Part 1</td><td><code>python lab3-part1.py 64</code></td><td>Adjust bit length (≥ 32). Uses Miller–Rabin to generate primes.</td></tr>
+      <tr><td>Part 2</td><td><code>python lab3-part2.py</code></td><td>Static values from assignment; prints cracked message.</td></tr>
+      <tr><td>Part 3</td><td><code>python lab3-part3.py</code></td><td>May take minutes+ for higher bit sizes. Edit <code>bit_sizes</code> list to shorten.</td></tr>
+    </tbody>
+  </table>
+  <p>Requirements: Python 3.9+, modules: <code>sympy</code>, <code>matplotlib</code>. Install with:</p>
+  <pre><code>pip install sympy matplotlib</code></pre>
+</section>
+
+<section id="notes">
+  <h2>Conceptual Recap</h2>
+  <ul>
+    <li><strong>Key Generation:</strong> pick primes p,q → n=pq → λ(n)=lcm(p-1,q-1) → choose e (65537) → d= e<sup>-1</sup> mod λ(n).</li>
+    <li><strong>Encrypt:</strong> C = M^e mod n.</li>
+    <li><strong>Decrypt:</strong> M = C^d mod n.</li>
+    <li><strong>Cracking (simplified):</strong> factor n ⇒ get p,q ⇒ derive d ⇒ decrypt.</li>
+    <li><strong>Security:</strong> relies on difficulty of factoring large n.</li>
+  </ul>
+</section>
+
+<section id="limitations">
+  <h2>Limitations & Extensions</h2>
+  <ul>
+    <li>Uses <code>sympy.primefactors</code>; real attacks use advanced algorithms (e.g., Quadratic Sieve, Number Field Sieve).</li>
+    <li>No padding (e.g., OAEP); raw RSA is insecure for real messages.</li>
+    <li>No side-channel considerations.</li>
+    <li>Could extend Part 3 to log data to CSV and fit growth curves.</li>
+  </ul>
+</section>
+
+</main>
+<footer>
+  &copy; 2025 RSA Lab Demo • <a href="https://github.com/JosephPotapenko/RSA-Key-Cracking" target="_blank" rel="noopener">View Source</a>
+</footer>
+<script>
+// Theme Toggle / Persistence
+(function(){
+  const body=document.body;
+  const btn=document.getElementById('themeToggle');
+  function apply(mode){
+    if(mode==='light'){body.setAttribute('data-theme','light'); btn.textContent='🌑 Dark';}
+    else {body.removeAttribute('data-theme'); btn.textContent='🌕 Light';}
+  }
+  const stored=localStorage.getItem('theme');
+  apply(stored==='light'?'light':'dark');
+  btn.addEventListener('click',()=>{
+    const next= body.getAttribute('data-theme')==='light' ? 'dark' : 'light';
+    localStorage.setItem('theme', next);
+    apply(next);
+  });
+})();
+</script>
+</body>
+</html>

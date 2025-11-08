@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Lab 3 – RSA Encryption & Cracking (All-in-One)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+ :root {
+   --bg:#0e1117;
+   --panel:#161b22;
+   --accent:#58a6ff;
+   --text:#c9d1d9;
+   --danger:#ff6b6b;
+   --ok:#3fb950;
+   --muted:#8b949e;
+   --code-bg:#0d1117;
+   font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+ }
+ /* Light theme overrides */
+ body[data-theme="light"] {
+   --bg:#f5f7fa;
+   --panel:#ffffff;
+   --accent:#0066cc;
+   --text:#1b1f23;
+   --danger:#d92c2c;
+   --ok:#1f883d;
+   --muted:#57606a;
+   --code-bg:#f0f3f6;
+ }
+ body {background:var(--bg);color:var(--text);margin:0;padding:0;line-height:1.4;}
+ header {padding:1.2rem 2rem;background:#121820;border-bottom:1px solid #222;}
+ h1 {margin:0;font-size:clamp(1.5rem,2.5vw,2.4rem);} 
+ main {max-width:1200px;margin:0 auto;padding:1.2rem;}
+ section {margin-bottom:1.2rem;background:var(--panel);padding:1rem 1.1rem;border-radius:10px;box-shadow:0 0 0 1px #1f242c,0 4px 12px rgba(0,0,0,.35);} 
+ h2 {margin-top:0;font-size:1.1rem;letter-spacing:.4px;text-transform:uppercase;color:#fff;}
+ pre {background:var(--code-bg);padding:.8rem 1rem;border-radius:6px;overflow:auto;font-size:.85rem;}
+ code {font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;}
+ table {border-collapse:collapse;width:100%;margin:.6rem 0;font-size:.9rem;}
+ th,td {border:1px solid #2d333b;padding:.5rem;text-align:left;}
+ th {background:#1f242c;}
+ .warn {color:var(--danger);font-weight:600;}
+ .ok {color:var(--ok);font-weight:600;}
+ .pill {display:inline-block;padding:.25rem .6rem;border-radius:999px;background:#21262d;font-size:.7rem;letter-spacing:.5px;text-transform:uppercase;margin-right:.4rem;}
+ .btn {display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:#fff !important;border:0;padding:.55rem .9rem;font-weight:600;border-radius:6px;cursor:pointer;margin:.25rem .4rem 0 0;font-size:.85rem;text-decoration:none;}
+ .btn.secondary {background:#30363d;color:#fff !important;}
+ body[data-theme="light"] .btn {background:var(--accent);color:#ffffff !important;}
+ body[data-theme="light"] .btn.secondary {background:#e9eef3;color:#0e1117 !important;border:1px solid #d0d7de;}
+ .btn:focus,.btn:hover{filter:brightness(1.1);} 
+ .toolbar {display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.6rem 0 .2rem;}
+ .tabs {display:flex;flex-wrap:wrap;gap:.4rem;padding:.4rem;background:#0f141a;border-radius:8px;border:1px solid #242b33;margin-bottom:.8rem;}
+ .tab-btn {background:#21262d;color:#fff;border:1px solid #2d333b;border-radius:6px;padding:.4rem .7rem;cursor:pointer;font-weight:600;}
+ .tab-btn.active {background:var(--accent);border-color:transparent;}
+ .tab-panel {display:none;}
+ .tab-panel.active {display:block;}
+ .grid-2 {display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;}
+.images-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:1.4rem;}
+ .demo-box {border:1px solid #30363d;padding:1rem;border-radius:8px;background:#0f141a;}
+ .row {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem;}
+ label {display:block;font-size:.8rem;margin-top:.6rem;}
+ input,select,textarea {background:#0d1117;color:var(--text);border:1px solid #30363d;border-radius:6px;padding:.45rem .6rem;font-size:.85rem;width:100%;}
+ textarea {min-height:120px;}
+ .kv {display:grid;grid-template-columns:140px 1fr;gap:.4rem;}
+ .kv div {padding:.2rem 0;border-bottom:1px dashed #2b2f36;}
+ figure {margin:0;}
+ figcaption {font-size:.75rem;opacity:.7;margin-top:.3rem;}
+ footer {text-align:center;padding:1.2rem 1rem;font-size:.75rem;opacity:.65;}
+ .tagline {font-size:.9rem;opacity:.8;margin-top:.4rem;}
+ .tight-buttons .btn {flex:0 0 auto;}
+ .tight-buttons {display:flex;flex-wrap:wrap;gap:.4rem;}
+ .ai-badge {display:inline-block;margin-left:.75rem;padding:.25rem .55rem;border-radius:6px;background:#21262d;color:var(--accent);font-size:.65rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border:1px solid #2d333b;}
+ body[data-theme="light"] .ai-badge {background:#e9eef3;border-color:#d0d7de;}
+ body[data-theme="light"] header {background:#ffffff;border-bottom:1px solid #d0d7de;}
+ body[data-theme="light"] h2 {color:#0e1117;}
+ body[data-theme="light"] .tab-btn {background:#eef2f6;color:#0e1117;border-color:#d0d7de;}
+ body[data-theme="light"] .tab-btn.active {background:var(--accent);color:#fff;}
+ body[data-theme="light"] section {box-shadow:0 0 0 1px #d0d7de,0 4px 12px rgba(0,0,0,.08);}
+ body[data-theme="light"] .tabs {background:#f6f8fa;border-color:#d0d7de;}
+ body[data-theme="light"] th, body[data-theme="light"] td {border-color:#d0d7de;}
+ body[data-theme="light"] th {background:#f6f8fa;}
+ body[data-theme="light"] .btn.secondary {background:#eaeef2;color:#0e1117;}
+ body[data-theme="light"] .demo-box {background:#ffffff;border-color:#d0d7de;}
+ body[data-theme="light"] input, body[data-theme="light"] select, body[data-theme="light"] textarea {background:#ffffff;color:#1b1f23;border-color:#d0d7de;}
+ body[data-theme="light"] .kv div {border-bottom-color:#d0d7de;}
+ body[data-theme="light"] img {border-color:#d0d7de !important;}
+ body[data-theme="light"] .pill {background:#eef2f6;color:#0e1117;border:1px solid #d0d7de;}
+ .details-toggle label {display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;cursor:pointer;user-select:none;padding:.3rem .55rem;border-radius:6px;background:#0f141a;border:1px solid #2d333b;line-height:1.2;}
+ .details-toggle input[type=checkbox]{width:16px;height:16px;cursor:pointer;}
+ body[data-theme="light"] .details-toggle label {background:#ffffff;border-color:#d0d7de;}
+ @media (max-width:700px){body{font-size:15px;}header{padding:1rem 1.2rem;}main{padding:1rem;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lab 3 – RSA Encryption & Key Cracking</h1>
+  <div class="tagline">All parts, code, screenshots, and an interactive RSA demo in one page.</div>
+  <span class="ai-badge" title="HTML interface auto-generated by an AI assistant">AI‑Generated UI</span>
+  <div class="toolbar">
+    <button class="btn" data-goto-tab="code">Open Code Files</button>
+  <a class="btn secondary" href="index.html" title="Go to index page demo">Index Page</a>
+  <span style="opacity:.7;font-size:.85rem;margin-left:.5rem;">Repo: <a href="https://github.com/JosephPotapenko/RSA-Key-Cracking" style="color:var(--accent);">GitHub</a></span>
+    <button class="btn secondary" id="themeToggle" aria-label="Toggle light/dark theme">🌕 Light</button>
+  </div>
+</header>
+<main>
+<section>
+  <div class="tabs" id="top-tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="interactive" id="tab-interactive">Interactive Demo</button>
+    <button class="tab-btn" data-tab="code">Code Files</button>
+  <button class="tab-btn" data-tab="images">Images & Graphs</button>
+  <button class="tab-btn" data-tab="documents">Documents</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div class="tab-panel active" id="overview">
+    <h2>Overview</h2>
+    <p>This lab explores the RSA cryptosystem across three scripts:
+      key generation + sample encryption/decryption (Part 1), cracking a provided RSA instance by factoring the modulus (Part 2),
+      and measuring how cracking time scales with prime bit length (Part 3). A Miller–Rabin primality test (<code>prime.py</code>) underpins key generation.
+    </p>
+    <div class="grid-2">
+      <div>
+        <div class="pill">Part 1</div>
+        <p>Generate keys and demonstrate encrypt/decrypt in both directions using <code>e=65537</code>.</p>
+        <pre><code>python lab3-part1.py 64
+public key is:  (n,e)
+private key is: (n,d)
+message:        b'test,message'
+ciphered:       123456...
+deciphered:     b'test,message'
+</code></pre>
+      </div>
+      <div>
+        <div class="pill">Part 2</div>
+        <p>Given a fixed public key and ciphertext C, factor n ⇒ get p,q ⇒ compute λ(n) and d ⇒ decrypt to bytes.</p>
+        <pre><code>python lab3-part2.py
+p: ...
+q: ...
+lambda(n): ...
+d: ...
+decrypted message: b'YouDonePassed!!'
+</code></pre>
+      </div>
+      <div>
+        <div class="pill">Part 3</div>
+        <p>Time how long it takes to factor n with primes of bit sizes [64, 74, 84, 94, 104]; plot results.</p>
+        <pre><code>python lab3-part3.py
+Testing 64-bit primes
+   Test 1: 0.0021 s
+   ...
+Average for 64-bit
+Time: 0.0020 s
+...
+Plot saved as rsa_crack_times.png
+</code></pre>
+      </div>
+      <div>
+        <div class="pill">Helper</div>
+        <p><code>prime.py</code> implements Miller–Rabin and <code>gen_prime(bits)</code> used in key generation.</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" data-goto-tab="images">Graph</button>
+      <button class="btn" data-goto-tab="documents" data-doc="lab3.pdf">Lab PDF</button>
+      <button class="btn" data-goto-tab="code">Source</button>
+    </div>
+  </div>
+
+  <!-- Interactive Demo Tab -->
+  <div class="tab-panel" id="interactive">
+    <h2>Interactive RSA – Small-Key Encryption & Decryption</h2>
+    <p>This demo performs real RSA steps client-side with small keys: generate primes, compute n and d, chunk the message, encrypt with the public key, and decrypt with the private key. It also shows “sign” (private) and “verify” (public) on the same chunks. No padding is used (mirrors the lab code); never use this in production.</p>
+    <p><strong>How to use:</strong>
+    1) Click "Generate key" to create small primes p,q and keys (n,e),(n,d).
+    2) Enter a short ASCII message.
+    3) Click "Encrypt ➜ Decrypt" to see ciphertext blocks and recovered plaintext.
+    4) Optionally click "Sign ➜ Verify" to simulate signatures using d then e.
+    </p>
+    <div class="demo-box">
+      <div class="row">
+        <div>
+          <label>Message (ASCII)</label>
+          <input type="text" id="msg" value="test,message" />
+        </div>
+        <div>
+          <label>Target bits per prime</label>
+          <select id="bits">
+            <option value="16">16</option>
+            <option value="20">20</option>
+            <option value="24" selected>24</option>
+            <option value="28">28</option>
+            <option value="32">32</option>
+            <option value="40">40</option>
+          </select>
+        </div>
+        <div>
+          <label>Public exponent e</label>
+          <input type="number" id="exp" value="65537" />
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="gen">Generate</button>
+        <button class="btn" id="encdec">Encrypt/Decrypt</button>
+        <button class="btn secondary" id="signverify">Sign/Verify</button>
+        <button class="btn" data-goto-tab="code">Code</button>
+      </div>
+  <div class="details-toggle"><label for="showDetails"><input type="checkbox" id="showDetails" /> <span>Show detailed math steps</span></label></div>
+      <div class="row">
+        <div>
+          <h3>Public Key (n, e)</h3>
+          <div class="kv" id="pubKV"></div>
+        </div>
+        <div>
+          <h3>Private Key (n, d)</h3>
+          <div class="kv" id="privKV"></div>
+        </div>
+      </div>
+      <div>
+        <h3>Steps</h3>
+        <pre id="steps"><code>Ready.</code></pre>
+      </div>
+      <div>
+        <h3>Encryption/Decryption Functions</h3>
+        <pre><code># Python (lab style)
+def cipher(m_bytes, e, n):
+    i = int.from_bytes(m_bytes)
+    return pow(i, e, n)
+
+def dcipher(c, d, n):
+    return pow(c, d, n)
+
+// JavaScript (this demo)
+// m is a BigInt block, c is a BigInt block
+function rsaEncryptBlock(m, e, n){ return modPow(m, e, n); }
+function rsaDecryptBlock(c, d, n){ return modPow(c, d, n); }
+</code></pre>
+      </div>
+      <div>
+        <h3>Result</h3>
+        <pre id="result"><code>Ready.</code></pre>
+      </div>
+    </div>
+    <p class="warn">If your message is longer than the maximum block size for the selected n, it will be chunked automatically so every block integer fits under n (int-from-bytes then pow mod n).</p>
+  </div>
+
+  <!-- Code Files Tab -->
+  <div class="tab-panel" id="code">
+    <h2>Code Files</h2>
+    <div class="toolbar">
+      <button class="btn secondary" data-goto-tab="interactive">⬅ Back to Demo</button>
+      <button class="btn" data-goto-tab="documents" data-doc="lab3.pdf">Lab PDF</button>
+    </div>
+    <div class="tabs" id="code-tabs">
+      <button class="tab-btn active" data-tab="code-part1">lab3-part1.py</button>
+      <button class="tab-btn" data-tab="code-part2">lab3-part2.py</button>
+      <button class="tab-btn" data-tab="code-part3">lab3-part3.py</button>
+      <button class="tab-btn" data-tab="code-prime">prime.py</button>
+    </div>
+    <div class="tab-panel active" id="code-part1">
+<pre><code>#I used math.lcm, which requires python 3.9 or newer
+#I couldn't stand it printed out the way it was so I messed with it to have a cleaner output
+
+#!/usr/bin/python3
+from prime import *
+import math, random, sys
+
+def main():
+ 
+    print("")
+
+    public,private = make_key(int(sys.argv[1]))
+
+    #public key = (n,e)
+    print(f"public key is:  ({public[0]},{public[1]})")
+
+    #private key = (n,d)
+    print(f"private key is: ({private[0]},{private[1]})")
+    #message to encrypt
+    msg = b'test,message'
+ 
+    print("")
+
+    print("message:       ", msg)
+    print("int from bytes:", int.from_bytes(msg))
+
+ 
+    print("")
+
+
+    #cipher with public key
+    x = cipher(msg,public[1],public[0])
+    print("ciphered:      ", x)
+
+    #decipher with private key
+    y = dcipher(x, private[1], private[0])
+    print("deciphered:    ", y.to_bytes(len(msg)))
+    
+    print("")
+
+    #encrypt with private key 
+    ciph = cipher_d(msg, private[1], private[0])
+    print("encrypted:     ", ciph)
+
+    #decrypt with public key
+    dciph = dcipher(ciph, public[1], public[0])
+    print("decrypted:     ", dciph.to_bytes(len(msg)))
+    
+    print("")
+
+
+def cipher(m,e,n):
+    i = int.from_bytes(m)
+    return pow(i,e,n)
+
+def dcipher(c,d,n):
+    return pow(c,d,n)
+
+#technically redundant, but it'll help me remember when I look back at this
+def cipher_d(m, d, n):
+    i = int.from_bytes(m)
+    return pow(i, d, n)
+
+"""
+FINISH THIS FUNCTION
+You'll need a function from prime.py
+"""
+def make_key(bit_len):
+    # compute n and d
+    # (n,e) is your public key
+    # (n,d) is your private key
+    # use 65537 as e
+    
+    p = gen_prime(bit_len)
+    q = gen_prime(bit_len)
+    while q == p:
+        q = gen_prime(bit_len)
+    n = p * q
+    lm = math.lcm(p-1, q-1)
+    e = 65537
+    d = modinv(e,lm)
+    
+    return((n,e),(n,d))
+
+#found this code somewhere (Greatest common denominator)
+def egcd(a, b):
+    x,y, u,v = 0,1, 1,0
+    while a != 0:
+        q,r = b//a,b%a; m,n = x-u*q,y-v*q
+        b,a, x,y, u,v = a,r, u,v, m,n
+    return b, x, y
+
+"""
+function to find modular multiplicative inverse in RSA
+must give e and totient (in our case lambda(n) = lm)
+stole this code too :)
+"""
+def modinv(a, m):
+    g, x, y = egcd(a, m)
+    if g != 1:
+        return None  # modular inverse does not exist
+    else:
+        return x % m
+
+if __name__ == "__main__":
+    main()
+</code></pre>
+    </div>
+    <div class="tab-panel" id="code-part2">
+<pre><code>#I wrote my code to be very verbose and to state every new data point. Helps me keep track of everything. Struggled on lab 2 because I had a lot of data flying around without always seeing what they all were and what I was doing with it.  
+
+#!/usr/bin/python3
+from prime import *
+import math, sympy
+
+def main():
+    print("")
+
+    #given
+    C = 1315578006529763640141359009929019255795
+    public_key = (3039956819131923800469303260782717053853, 65537)
+    n, e = public_key
+
+    print("public key:\t\t", n, ",", e)
+    print("ciphertext:\t\t", C)
+    print("")
+
+    #factor n into p and q
+    prime = sympy.primefactors(n)
+    p, q = prime[0], prime[1]
+    print("p:\t\t\t", p)
+    print("q: \t\t\t", q)
+    print("")
+
+    #find lambda(n)
+    lm = math.lcm(p - 1, q - 1)
+
+    #find d
+    d = modinv(e, lm)
+    print("lambda(n):\t\t", lm)
+    print("d:\t\t\t", d)
+    print("")
+
+    #decrypt
+    M = dcipher(C,d,n)
+    print("decrypted int:\t\t", M)
+
+    #int to bytes
+    try:
+        msg = M.to_bytes((M.bit_length() + 7) // 8)
+    except OverflowError:
+        msg = b"(decryption failed)"
+    print("decrypted message: \t", msg)
+    print("")
+
+
+def egcd(a, b):
+    x, y, u, v = 0, 1, 1, 0
+    while a != 0:
+        q, r = b // a, b % a
+        m, n = x - u * q, y - v * q
+        b, a, x, y, u, v = a, r, u, v, m, n
+    return b, x, y
+
+def modinv(a, m):
+    g, x, y = egcd(a, m)
+    if g != 1:
+        return None
+    else:
+        return x % m
+
+def cipher(m,e,n):
+    i = int.from_bytes(m)
+    return pow(i,e,n)
+
+def dcipher(c,d,n):
+    return pow(c,d,n)
+
+
+if __name__ == "__main__":
+    main()
+</code></pre>
+    </div>
+    <div class="tab-panel" id="code-part3">
+<pre><code>#!/usr/bin/python3
+from prime import *
+import math, sympy, time, statistics, matplotlib.pyplot as plt
+
+def main():
+    print("")
+    print("RSA key cracking")
+    print("")
+
+    #increment by 10, but when I hit 114, it took like 1/2 hour and nothing happened, so I decided to rewrite it to be more managable. 
+    bit_sizes = [64, 74, 84, 94, 104]
+    avg_times = []
+
+    #4 tests which is 3-5
+    tests = 4
+    for bits in bit_sizes:
+        print(f"Testing {bits}-bit primes")
+        times = []
+
+        for i in range(tests):
+            start = time.time()
+
+            p = gen_prime(bits)
+            q = gen_prime(bits)
+            while q == p:
+                q = gen_prime(bits)
+            n = p * q
+
+            sympy.primefactors(n)
+
+            end = time.time()
+            elapsed = end - start
+            times.append(elapsed)
+            print(f"   Test {i+1}: {elapsed:.4f} seconds")
+
+        avg = statistics.mean(times)
+        avg_times.append(avg)
+        print(f"Average for {bits}-bit")
+        print(f"Time: {avg:.4f} seconds")
+        print("")
+
+    #plot
+    plot_points(bit_sizes, avg_times)
+
+    print("")
+    print("Experiment complete.")
+    print("Plot saved as: rsa_crack_times.png")
+    print("")
+
+
+def plot_points(bit_sizes, avg_times):
+    plt.figure(figsize=(8, 5))
+    plt.plot(bit_sizes, avg_times, marker='o', linestyle='-', linewidth=2)
+    plt.title("RSA Key Cracking Time VS. Bit Size")
+    plt.xlabel("bits per prime (key size component)")
+    plt.ylabel("avg. time to crack (sec.)")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("rsa_crack_times.png")
+    plt.show()
+
+
+def egcd(a, b):
+    x, y, u, v = 0, 1, 1, 0
+    while a != 0:
+        q, r = b // a, b % a
+        m, n = x - u * q, y - v * q
+        b, a, x, y, u, v = a, r, u, v, m, n
+    return b, x, y
+
+
+def modinv(a, m):
+    g, x, y = egcd(a, m)
+    if g != 1:
+        return None
+    else:
+        return x % m
+
+
+if __name__ == "__main__":
+    main()
+</code></pre>
+    </div>
+    <div class="tab-panel" id="code-prime">
+<pre><code>#!/usr/bin/python3
+# Retrieved from: http://en.literateprograms.org/Miller-Rabin_primality_test_(Python)?oldid=17104
+
+import random, sys
+
+def miller_rabin_pass(a, s, d, n):
+    a_to_power = pow(a, d, n)
+    if a_to_power == 1:
+        return True
+    for i in range(s-1):
+        if a_to_power == n - 1:
+            return True
+        a_to_power = (a_to_power * a_to_power) % n
+    return a_to_power == n - 1
+
+
+def miller_rabin(n):
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d >>= 1
+        s += 1
+    for repeat in range(20):
+        a = 0
+        while a == 0:
+            a = random.randrange(n)
+        if not miller_rabin_pass(a, s, d, n):
+            return False
+    return True
+
+def test_num(num):
+    n = int(num)
+    return (miller_rabin(n) and "PRIME" or "COMPOSITE")
+
+def gen_prime(nbits):
+        while True:
+            p = random.getrandbits(nbits)
+            p |= 2**nbits | 1
+            if miller_rabin(p):
+                return p
+
+def main():
+    if sys.argv[1] == "test":
+        print(test_num(sys.argv[2]))
+    elif sys.argv[1] == "genprime":
+        print(gen_prime(int(sys.argv[2])))
+
+if __name__ == "__main__":
+    main()
+</code></pre>
+    </div>
+  </div>
+
+  <!-- Images & Graphs Tab -->
+  <div class="tab-panel" id="images">
+    <h2>Images & Graphs</h2>
+    <div class="toolbar">
+      <button class="btn secondary" data-goto-tab="interactive">⬅ Back to Demo</button>
+      <button class="btn" data-goto-tab="documents" data-doc="lab3.pdf">Open Lab PDF</button>
+    </div>
+    <div class="images-grid">
+      <figure>
+        <img src="rsa_crack_times.png" alt="RSA cracking time plot" style="width:100%;border:1px solid #30363d;border-radius:8px;" />
+        <figcaption>rsa_crack_times.png</figcaption>
+      </figure>
+      <figure>
+        <img src="part1_screenshot.png" alt="Part 1 output screenshot" style="width:100%;border:1px solid #30363d;border-radius:8px;" />
+        <figcaption>part1_screenshot.png</figcaption>
+      </figure>
+      <figure>
+        <img src="lab3.png" alt="Lab diagram" style="width:100%;border:1px solid #30363d;border-radius:8px;" />
+        <figcaption>lab3.png</figcaption>
+      </figure>
+      <figure>
+        <img src="rsa_cracked_keys_data.png" alt="Cracked keys data" style="width:100%;border:1px solid #30363d;border-radius:8px;" />
+        <figcaption>rsa_cracked_keys_data.png</figcaption>
+      </figure>
+    </div>
+    <!-- Downloads can be provided in Documents tab; avoid opening new tabs for view actions -->
+  </div>
+
+  <!-- Documents Tab -->
+  <div class="tab-panel" id="documents">
+    <h2>Documents</h2>
+    <div class="toolbar">
+      <button class="btn secondary" data-goto-tab="interactive">⬅ Back to Demo</button>
+    </div>
+    <p>Lab answers and assignment PDF embedded below. If your browser cannot display PDFs, use the download link.</p>
+    <div style="border:1px solid #2d333b;border-radius:8px;overflow:hidden;">
+      <object id="docViewer" data="lab3.pdf" type="application/pdf" width="100%" height="700px">
+        <p>PDF preview unavailable. <a href="lab3.pdf" download>Download lab3.pdf</a></p>
+      </object>
+    </div>
+    <div class="toolbar">
+      <a class="btn secondary" href="lab3.pdf" download>Download lab3.pdf</a>
+    </div>
+  </div>
+
+</section>
+
+</main>
+<footer>
+  <div class="toolbar" style="justify-content:center;">
+    <a class="btn" href="https://github.com/JosephPotapenko/RSA-Key-Cracking" target="_blank" rel="noopener">GitHub Repo</a>
+    <a class="btn secondary" href="#top-tabs">Back to top</a>
+  </div>
+  <div>&copy; 2025 RSA Lab Demo</div>
+</footer>
+
+<script>
+// --- Theme Toggle & Persistence ---
+(function(){
+  const body=document.body;
+  const toggleBtn=()=>document.getElementById('themeToggle');
+  const apply=(mode)=>{
+    if(mode==='light'){body.setAttribute('data-theme','light');} else {body.removeAttribute('data-theme');}
+    if(toggleBtn()) toggleBtn().textContent = mode==='light' ? '🌑 Dark' : '🌕 Light';
+  };
+  const stored=localStorage.getItem('theme');
+  apply(stored==='light'?'light':'dark');
+  if(toggleBtn()){
+    toggleBtn().addEventListener('click',()=>{
+      const current=body.getAttribute('data-theme')==='light'?'light':'dark';
+      const next=current==='light'?'dark':'light';
+      localStorage.setItem('theme',next);
+      apply(next);
+    });
+  }
+})();
+// --- Tabs ---
+function wireTabs(containerId){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const buttons = container.querySelectorAll('.tab-btn');
+  buttons.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      buttons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      const panelParent = container.parentElement;
+      const panels = panelParent.querySelectorAll('.tab-panel');
+      panels.forEach(p=>p.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+    });
+  });
+}
+wireTabs('top-tabs');
+wireTabs('code-tabs');
+// documents tab has no nested tab set now
+
+// --- RSA helpers (BigInt) ---
+const B0 = 0n;
+function gcd(a,b){a=BigInt(a);b=BigInt(b);while(b){[a,b]=[b,a%b]}return a;}
+function lcm(a,b){return (a*b)/gcd(a,b);}
+function egcd(a,b){a=BigInt(a);b=BigInt(b);let x=0n,y=1n,u=1n,v=0n;while(a!==0n){let q=b/a;let r=b%a;let m=x-u*q;let n=y-v*q;b=a;a=r;x=u;y=v;u=m;v=n;}return [b,x,y];}
+function modinv(a,m){a=BigInt(a);m=BigInt(m);const [g,x] = egcd(a,m);if(g!==1n) return null;return (x % m + m) % m;}
+function modPow(base,exp,mod){base%=mod;let res=1n;while(exp>0n){if(exp&1n) res=(res*base)%mod;base=(base*base)%mod;exp >>= 1n;}return res;}
+function bitLen(n){return n===0n?0:n.toString(2).length;}
+
+// Miller–Rabin for 64-bit safe range using deterministic bases
+// For demo sizes (<= 40 bits per prime) this is ample.
+function isProbablePrime(n){
+  n=BigInt(n);
+  if(n<2n) return false;
+  const small=[2n,3n,5n,7n,11n,13n,17n,19n,23n,29n,31n,37n];
+  if(small.includes(n)) return true;
+  for(const p of small){ if(n%p===0n) return false; }
+  let d=n-1n,s=0n; while((d&1n)===0n){d >>= 1n; s++;}
+  const bases=[2n,3n,5n,7n,11n,13n,17n];
+  const tryBase=(a)=>{
+    if(a%(n-2n)+2n===n) a=2n;
+    let x=modPow(a,d,n);
+    if(x===1n||x===n-1n) return true;
+    for(let r=1n;r<s;r++){
+      x=(x*x)%n;
+      if(x===n-1n) return true;
+    }
+    return false;
+  };
+  for(let a of bases){ if(a>=n) continue; if(!tryBase(a)) return false; }
+  return true;
+}
+
+function randBits(bits){
+  // Not cryptographically strong; adequate for demo.
+  const bytes=Math.ceil(bits/8);
+  const arr=new Uint8Array(bytes);
+  for(let i=0;i<bytes;i++) arr[i]=Math.floor(Math.random()*256);
+  let n=0n; for(const b of arr){ n=(n<<8n)|BigInt(b); }
+  // set top and bottom bits
+  const top=1n<<BigInt(bits-1); n|=top; n|=1n; return n;
+}
+
+function genPrime(bits){
+  for(let i=0;i<100000;i++){
+    const n=randBits(bits);
+    if(isProbablePrime(n)) return n;
+  }
+  throw new Error('Failed to find prime');
+}
+
+// bytes and blocks
+function strToBytes(s){return new TextEncoder().encode(s);} 
+function bytesToStr(b){return new TextDecoder().decode(b);} 
+function bytesToBigInt(bytes){let x=0n; for(const v of bytes){x=(x<<8n)|BigInt(v);} return x;}
+function bigIntToBytes(x, len){let b=[]; for(let i=0;i<len;i++){b.unshift(Number(x & 255n)); x >>= 8n;} return new Uint8Array(b);} 
+function chunkBytes(bytes,maxLen){let out=[]; for(let i=0;i<bytes.length;i+=maxLen){out.push(bytes.slice(i,i+maxLen));} return out;}
+function toHex(n){return '0x'+n.toString(16);} 
+
+// State
+let state={p:null,q:null,n:null,lambda:null,e:65537n,d:null,blockBytes:0};
+
+function updateKeyViews(){
+  const pub=document.getElementById('pubKV');
+  const priv=document.getElementById('privKV');
+  const kv=(k,v)=>`<div><strong>${k}</strong></div><div style="word-break:break-all;">${v}</div>`;
+  pub.innerHTML = state.n ? [
+    kv('n', state.n),
+    kv('e', state.e)
+  ].join('') : '<div class="warn">No key yet.</div>';
+  priv.innerHTML = state.d ? [
+    kv('n', state.n),
+    kv('d', state.d)
+  ].join('') : '<div class="warn">No key yet.</div>';
+}
+
+function logSteps(txt){
+  const pre=document.getElementById('steps');
+  pre.textContent = txt;
+}
+
+function ensureKey(){
+  if(state.n && state.d) return;
+  generateKey();
+}
+
+function generateKey(){
+  const bits=parseInt(document.getElementById('bits').value,10);
+  const eIn=BigInt(parseInt(document.getElementById('exp').value,10));
+  let p,q,n,lambda,e,d;
+  for(let tries=0;tries<1000;tries++){
+    p=genPrime(bits); q=genPrime(bits); if(p===q) continue;
+    n=p*q; lambda=lcm(p-1n,q-1n); e=eIn; const g=gcd(e,lambda); if(g!==1n) continue;
+    d=modinv(e,lambda); if(!d) continue; break;
+  }
+  const nBits=bitLen(n);
+  const maxBytes=Math.floor((nBits-1)/8); // ensure m < n for each block
+  state={p,q,n,lambda,e,d,blockBytes:maxBytes};
+  updateKeyViews();
+  logSteps(`Generated primes p and q (≈${bits} bits each)\nComputed n=p*q\nComputed λ(n)=lcm(p-1,q-1)\nSelected e=${e} and computed d=e^{-1} mod λ(n)\nMax plaintext block size: ${maxBytes} bytes`);
+}
+
+function encryptBytes(bytes){
+  const blocks=chunkBytes(bytes,state.blockBytes||1);
+  const cts=[]; const details=[];
+  for(const b of blocks){
+    const m=bytesToBigInt(b);
+    const c=modPow(m,state.e,state.n);
+    cts.push(c);
+    details.push(`m=${toHex(m)} ⇒ c=m^e mod n = ${toHex(c)}`);
+  }
+  return {blocks:cts, detail:details.join('\n')};
+}
+function decryptBlocks(blocks, origLens){
+  const bytesOut=[]; const details=[]; let i=0;
+  for(const c of blocks){
+    const m=modPow(c,state.d,state.n);
+    const len = origLens[i++] || state.blockBytes;
+    const b=bigIntToBytes(m, len);
+    bytesOut.push(b);
+    details.push(`c=${toHex(c)} ⇒ m=c^d mod n = ${toHex(m)}`);
+  }
+  return {bytes: Uint8Array.from(bytesOut.flat()), detail: details.join('\n')};
+}
+function signBytes(bytes){
+  const blocks=chunkBytes(bytes,state.blockBytes||1);
+  const sigs=[]; const details=[];
+  for(const b of blocks){
+    const m=bytesToBigInt(b);
+    const s=modPow(m,state.d,state.n);
+    sigs.push(s);
+    details.push(`m=${toHex(m)} ⇒ s=m^d mod n = ${toHex(s)}`);
+  }
+  return {blocks:sigs, detail:details.join('\n')};
+}
+function verifyBlocks(blocks, origLens){
+  const bytesOut=[]; const details=[]; let i=0;
+  for(const s of blocks){
+    const m=modPow(s,state.e,state.n);
+    const len = origLens[i++] || state.blockBytes;
+    const b=bigIntToBytes(m, len);
+    bytesOut.push(b);
+    details.push(`s=${toHex(s)} ⇒ m=s^e mod n = ${toHex(m)}`);
+  }
+  return {bytes: Uint8Array.from(bytesOut.flat()), detail: details.join('\n')};
+}
+
+// Convenience wrappers for demo (“encryptian” / “decryptian”)
+function encryptian(plainText){
+  ensureKey();
+  const bytes=strToBytes(plainText);
+  const enc=encryptBytes(bytes);
+  return enc; // {blocks: BigInt[], detail: string}
+}
+function decryptian(cipherBlocks, originalLengths){
+  ensureKey();
+  const dec=decryptBlocks(cipherBlocks, originalLengths);
+  return dec; // {bytes: Uint8Array, detail: string}
+}
+
+document.getElementById('gen').addEventListener('click',()=>{
+  generateKey();
+  document.getElementById('result').textContent='Key generated. Click Encrypt ➜ Decrypt.';
+  if(!document.getElementById('showDetails').checked){
+    logSteps('Key generated. Enable "Show detailed math steps" for block operations.');
+  }
+});
+
+document.getElementById('encdec').addEventListener('click',()=>{
+  ensureKey();
+  const msg=document.getElementById('msg').value;
+  const bytes=strToBytes(msg);
+  const origLens = chunkBytes(bytes,state.blockBytes||1).map(b=>b.length);
+  const enc=encryptBytes(bytes);
+  const dec=decryptBlocks(enc.blocks, origLens);
+  const rec=bytesToStr(dec.bytes);
+  if(document.getElementById('showDetails').checked){
+    logSteps(`Encrypt:\n${enc.detail}\n\nDecrypt:\n${dec.detail}`);
+  } else {
+    logSteps('Done. Toggle "Show detailed math steps" for per-block calculations.');
+  }
+  document.getElementById('result').textContent = `Cipher blocks (hex):\n${enc.blocks.map(toHex).join('\n')}\n\nRecovered: ${rec}`;
+});
+
+document.getElementById('signverify').addEventListener('click',()=>{
+  ensureKey();
+  const msg=document.getElementById('msg').value;
+  const bytes=strToBytes(msg);
+  const origLens = chunkBytes(bytes,state.blockBytes||1).map(b=>b.length);
+  const sig=signBytes(bytes);
+  const ver=verifyBlocks(sig.blocks, origLens);
+  const rec=bytesToStr(ver.bytes);
+  if(document.getElementById('showDetails').checked){
+    logSteps(`Sign:\n${sig.detail}\n\nVerify:\n${ver.detail}`);
+  } else {
+    logSteps('Signature + verification complete. Toggle details to view math.');
+  }
+  document.getElementById('result').textContent = `Signature blocks (hex):\n${sig.blocks.map(toHex).join('\n')}\n\nVerified message: ${rec}`;
+});
+
+// buttons that jump to a tab
+document.querySelectorAll('[data-goto-tab]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab=btn.getAttribute('data-goto-tab');
+    const targetBtn=document.querySelector(`#top-tabs .tab-btn[data-tab="${tab}"]`);
+    if(targetBtn){targetBtn.click();}
+    const doc=btn.getAttribute('data-doc');
+    if(doc){
+      const obj=document.getElementById('docViewer');
+      if(obj) obj.setAttribute('data', doc);
+    }
+  });
+});
+</script>
+
+</body>
+</html>
